@@ -1,0 +1,6 @@
+cryptography~=3.4.8
+Pillow~=9.0.1
+keyring~=23.5.0
+click~=8.0.3
+blinker~=1.4
+Flask~=3.0.2
