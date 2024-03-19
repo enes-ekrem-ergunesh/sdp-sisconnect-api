@@ -1,18 +1,16 @@
-import sys
-sys.path.insert(0, './db/')  # Add the DB folder to the Python path
-
 from flask import Flask
-import sisConnectDB as scdb
-
+from flask_bcrypt import Bcrypt
 from flask_cors import CORS
+import db.sisConnectDB as sCDB
 
 app = Flask(__name__)
 CORS(app)  # Apply CORS for all routes
+bcrypt = Bcrypt(app)
 
 
 @app.route("/")
 def hello_world():
-    connection = scdb.get_connection()
+    connection = sCDB.get_connection()
     with connection:
         with connection.cursor() as cursor:
             # Read a single record
@@ -20,3 +18,16 @@ def hello_world():
             cursor.execute(sql, (1,))
             result = cursor.fetchone()
             return {"message": result['message'] + " (from Flask)"}
+
+
+# route test bcrypt
+@app.route("/bcrypt")
+def test_bcrypt():
+    password = 'my password'
+    my_hash = bcrypt.generate_password_hash(password)
+    verify = bcrypt.check_password_hash(my_hash, password)
+
+    wrong_password = 'my password!'
+    wrong_hash = bcrypt.generate_password_hash(password)
+    wrong_verify = bcrypt.check_password_hash(wrong_hash, wrong_password)
+    return "<p>" + str(my_hash) + "</p><p>" + str(verify) + "</p><p>" + str(wrong_verify) + "</p>"
