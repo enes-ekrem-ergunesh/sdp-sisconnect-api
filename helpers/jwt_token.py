@@ -1,12 +1,12 @@
 import jwt
 import db
 
-private_key = open('user_token/es256_private.pem').read()
-public_key = open('user_token/es256_public.pem').read()
+private_key = open('helpers/keys/es256_private.pem').read()
+public_key = open('helpers/keys/es256_public.pem').read()
 
 
 def create_token(payload):
-    '''
+    """
     Create a new token with the given payload
 
     Args:
@@ -14,33 +14,33 @@ def create_token(payload):
 
     Returns:
     str: token
-    '''
+    """
     return jwt.encode(payload, private_key, algorithm='ES256')
 
 
 def decode_token(token):
-    '''
+    """
     Decode the given token
-    
+
     Args:
     token: str
-    
+
     Returns:
     dict: payload
-    '''
+    """
     return jwt.decode(token, public_key, algorithms=['ES256'])
 
 
 def verify_token(token):
-    '''
+    """
     Verify the given token
-    
+
     Args:
     token: str
-    
+
     Returns:
     bool: True if the token is verified, False otherwise
-    '''
+    """
     try:
         jwt.decode(token, public_key, algorithms=['ES256'])
         return True
