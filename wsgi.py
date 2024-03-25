@@ -1,11 +1,14 @@
 from flask import Flask
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-import db.sisConnectDB as sCDB
+import db.dbConnections as sCDB
+import routes.userRoutes
 
 app = Flask(__name__)
 CORS(app)  # Apply CORS for all routes
 bcrypt = Bcrypt(app)
+
+app.register_blueprint(routes.userRoutes.bp)
 
 
 @app.route("/")
