@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, request
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
+from helpers.jwt_token import decode_token, verify_token
 import db.dbConnections as sCDB
 import routes.userRoutes
 
@@ -34,3 +35,29 @@ def test_bcrypt():
     wrong_hash = bcrypt.generate_password_hash(password)
     wrong_verify = bcrypt.check_password_hash(wrong_hash, wrong_password)
     return "<p>" + str(my_hash) + "</p><p>" + str(verify) + "</p><p>" + str(wrong_verify) + "</p>"
+
+
+@app.before_request
+def check_authorization():
+    no_auth_routes = ["/", "user/hello", "/user/login"]
+    if request.path in no_auth_routes:
+        return
+
+    # check if the token is present
+    if not request.headers.get("Authorization"):
+        return {
+            "status": 401,
+            "message": "Unauthorized!"
+        }
+
+    # get the token and user id
+    _token = request.headers.get("Authorization").split(" ")[1]
+    _user_id = decode_token(_token)["user_id"]
+
+    # verify the token
+    if not verify_token(_token, _user_id):
+        return {
+            "status": 401,
+            "message": "Unauthorized!"
+        }
+
