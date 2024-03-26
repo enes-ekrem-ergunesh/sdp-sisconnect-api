@@ -103,12 +103,22 @@ def db_get_user_by_email_h(email):
 
 def db_insert_user_sc(user):
     """
-    Inserts a user into the database
+    Inserts a user into the sisConnect database
 
     Args:
     user: dict
     """
-    # Insert the user into the user table in the sisConnect database
+    db_insert_user_sc_as_user(user)  # Insert the user into the user table
+    db_insert_user_sc_as_personnel_or_student(user)  # Insert the user into the personnel or student table
+
+
+def db_insert_user_sc_as_user(user):
+    """
+    Insert the user into the user table in the sisConnect database
+
+    Args:
+        user: dict
+    """
     connection = db.get_connection()  # get a connection to the database (sisConnect)
     try:  # try to insert the user
         with connection:  # use the connection
@@ -122,7 +132,14 @@ def db_insert_user_sc(user):
     except pymysql.MySQLError as e:  # handle exceptions
         http_response(500, "Database server error: " + str(e))
 
-    # Insert the user into the personnel or student table in the sisConnect database
+
+def db_insert_user_sc_as_personnel_or_student(user):
+    """
+    Insert the user into the personnel or student table in the sisConnect database
+
+    Args:
+        user: dict
+    """
     connection = db.get_connection()  # get a connection to the database (sisConnect)
     try:  # try to insert the user
         with connection:  # use the connection
@@ -139,6 +156,36 @@ def db_insert_user_sc(user):
                     connection.commit()
     except pymysql.MySQLError as e:  # handle exceptions
         http_response(500, "Database server error: " + str(e))
+
+
+def generate_token(user):
+    """
+    Generates a token for the user and inserts it into the database
+
+    Args:
+        user: dict
+
+    Returns:
+        token: str
+    """
+    created_at = datetime.datetime.now(tz=TIMEZONE)  # get the current time
+    valid_until = (
+        datetime.datetime.now(tz=TIMEZONE) + datetime.timedelta(days=7)
+        if request.json["remember_me"]
+        else datetime.datetime.now(tz=TIMEZONE) + datetime.timedelta(hours=1)
+    )  # set the token validity
+    token = jwt.create_token(
+        {
+            "user_id": user["id"],
+            "email": user["email"],
+            "created_at": created_at.isoformat(),
+            "valid_until": valid_until.isoformat(),
+        }
+    )
+
+    # add the token to the db
+    db_insert_token(token, user["id"], valid_until.isoformat())
+    return token
 
 
 def db_insert_token(token, user_id, valid_until):
@@ -161,6 +208,57 @@ def db_insert_token(token, user_id, valid_until):
                 connection.commit()  # commit the changes
     except pymysql.MySQLError as e:  # handle exceptions
         http_response(500, "Database server error: " + str(e))
+
+
+def db_append_user_fields_h(user):
+    """
+    Get the user fields from the harmony database and append them to the user
+
+    Args:
+    user: dict
+    """
+    user_h = db_get_user_by_email_h(request.json["email"])
+    # append all the fields from user_h to user if not already present
+    for key in user_h:
+        if key not in user:
+            user[key] = user_h[key]
+    # remove unnecessary user_id field
+    user.pop("user_id")
+
+
+def db_append_user_fields_sc(user, email):
+    """
+    Get the user fields from the sisConnect database and append them to the user
+
+    Args:
+    user: dict
+    """
+    user_sc = db_get_user_by_email_sc(email)
+    # append all the fields from user_sc to user
+    for key in user_sc:
+        user[key] = user_sc[key]
+    # remove unnecessary user_id field
+    user.pop("user_id")
+
+
+def first_time_login(user, email, password):
+    """
+    Checks if the user exists in the harmony database and if the password is correct
+
+    Args:
+    email: str
+    password: str
+    """
+    # get the user by email from harmony database
+    user = db_get_user_by_email_h(email)
+
+    # check if the user exists in harmony database
+    if not user:
+        http_response(400, "Invalid email or password.")
+
+    # check if the password is correct
+    if not bcrypt.check_password_hash(user["password"], password):
+        http_response(400, "Invalid email or password.")
 
 
 @bp.route("/user/hello", methods=["GET"])
@@ -196,64 +294,24 @@ def login():
     ):
         http_response(400, "Invalid request.")
 
-    # get the user by email from sisConnect database
-    user = db_get_user_by_email_sc(request.json["email"])
+    user = db_get_user_by_email_sc(request.json["email"])  # get the user by email from sisConnect database
 
-    # check if the user exists in sisConnect database
-    if user:
-        user_h = db_get_user_by_email_h(request.json["email"])
-        # append all the fields from user_h to user if not already present
-        for key in user_h:
-            if key not in user:
-                user[key] = user_h[key]
-        # remove unnecessary user_id field
-        user.pop("user_id")
+    if user:  # if user exists in the sisConnect database
+        db_append_user_fields_h(user)  # get the user details from the harmony database
 
-    # if the user does not exist in the sisConnect database
-    else:
-        # get the user by email from harmony database
-        user = db_get_user_by_email_h(request.json["email"])
+    else:  # if the user does not exist in the sisConnect database
+        first_time_login(user, request.json["email"], request.json["password"])  # login for the first time
 
-        # check if the user exists in harmony database
-        if not user:
-            http_response(400, "Invalid email or password.")
+        db_insert_user_sc(user)  # insert the user to the sisConnect database
 
-        # check if the password is correct
-        if not bcrypt.check_password_hash(user["password"], request.json["password"]):
-            http_response(400, "Invalid email or password.")
-
-        # add the user to the sisConnect database
-        db_insert_user_sc(user)
-
-        user_sc = db_get_user_by_email_sc(request.json["email"])
-        # append all the fields from user_sc to user
-        for key in user_sc:
-            user[key] = user_sc[key]
-        # remove unnecessary user_id field
-        user.pop("user_id")
+        db_append_user_fields_sc(user, request.json["email"])  # get the user details from the sisConnect database
 
     # check if the password is correct
     if not bcrypt.check_password_hash(user["password"], request.json["password"]):
         http_response(400, "Invalid email or password.")
 
     # generate a token
-    created_at = datetime.datetime.now(tz=TIMEZONE)  # get the current time
-    valid_until = (
-        datetime.datetime.now(tz=TIMEZONE) + datetime.timedelta(days=7)
-        if request.json["remember_me"]
-        else datetime.datetime.now(tz=TIMEZONE) + datetime.timedelta(hours=1)
-    )  # set the token validity
-    token = jwt.create_token(
-        {
-            "user_id": user["id"],
-            "email": user["email"],
-            "created_at": created_at.isoformat(),
-            "valid_until": valid_until.isoformat(),
-        }
-    )
-
-    # add the token to the db
-    db_insert_token(token, user["id"], valid_until.isoformat())
+    token = generate_token(user)
 
     return {
         "token": token
