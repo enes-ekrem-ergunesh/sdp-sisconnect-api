@@ -316,3 +316,36 @@ def login():
     return {
         "token": token
     }
+
+
+@bp.route("/user/logout", methods=["POST"])
+def logout():
+    """
+    Logs out a user
+
+    Prerequisites:
+    Headers: Authorization: Bearer <token>
+
+    Returns:
+    str: message
+    """
+
+    token = request.headers.get("Authorization").split(" ")[1]  # get the token
+    user_id = jwt.decode_token(token)["user_id"]  # get the user id
+
+    connection = db.get_connection()  # get a connection to the database (sisConnect)
+    try:  # try to revoke the token
+        with connection:  # use the connection
+            with connection.cursor() as cursor:  # get a cursor
+                # SQL query to revoke the token
+                sql = "update tokens set revoked_at = NOW() where token = %s and user_id = %s"
+                cursor.execute(sql, (token, user_id))  # execute the query
+                connection.commit()
+                return {
+                    "status": 200,
+                    "message": "Logged out successfully."
+                }
+    except pymysql.MySQLError as e:  # handle exceptions
+        http_response(500, "Database server error: " + str(e))
+
+
