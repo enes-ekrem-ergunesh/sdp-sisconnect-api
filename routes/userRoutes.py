@@ -171,7 +171,7 @@ def generate_token(user):
     created_at = datetime.datetime.now(tz=TIMEZONE)  # get the current time
     valid_until = (
         datetime.datetime.now(tz=TIMEZONE) + datetime.timedelta(days=7)
-        if request.json["remember_me"]
+        if request.json["rememberMe"]
         else datetime.datetime.now(tz=TIMEZONE) + datetime.timedelta(hours=1)
     )  # set the token validity
     token = jwt.create_token(
@@ -279,7 +279,7 @@ def login():
 
     Prerequisites:
     Headers: Content-Type: application/json
-    Body: {"email": <email>, "password": <password>, "remember_me": true/false}
+    Body: {"email": <email>, "password": <password>, "rememberMe": true/false}
 
     Returns:
     str: token
@@ -290,7 +290,7 @@ def login():
             not request.json
             or "email" not in request.json
             or "password" not in request.json
-            or "remember_me" not in request.json
+            or "rememberMe" not in request.json
     ):
         http_response(400, "Invalid request.")
 

@@ -2,6 +2,7 @@ from flask import Flask, request
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from helpers.jwt_token import decode_token, verify_token
+from helpers.http_response import http_response
 import db.dbConnections as sCDB
 import routes.userRoutes
 
@@ -18,7 +19,7 @@ def hello_world():
     with connection:
         with connection.cursor() as cursor:
             # Read a single record
-            sql = "SELECT `message` FROM `hello_world` WHERE `id`=%s"
+            sql = "select message from sisconnect.hello_world where id = %s"
             cursor.execute(sql, (1,))
             result = cursor.fetchone()
             return {"message": result['message'] + " (from Flask)"}
@@ -39,16 +40,13 @@ def test_bcrypt():
 
 @app.before_request
 def check_authorization():
-    no_auth_routes = ["/", "user/hello", "/user/login"]
+    no_auth_routes = ["/", "/user/hello", "/user/login"]
     if request.path in no_auth_routes:
         return
 
     # check if the token is present
     if not request.headers.get("Authorization"):
-        return {
-            "status": 401,
-            "message": "Unauthorized!"
-        }
+        http_response(401, "Unauthorized!")
 
     # get the token and user id
     _token = request.headers.get("Authorization").split(" ")[1]
@@ -56,8 +54,4 @@ def check_authorization():
 
     # verify the token
     if not verify_token(_token, _user_id):
-        return {
-            "status": 401,
-            "message": "Unauthorized!"
-        }
-
+        http_response(401, "Unauthorized!")
