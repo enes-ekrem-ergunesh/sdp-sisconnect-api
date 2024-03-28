@@ -44,6 +44,10 @@ def check_authorization():
     if request.path in no_auth_routes:
         return
 
+    # bypass if request is an OPTIONS
+    if request.method == "OPTIONS":
+        return
+
     # check if the token is present
     if not request.headers.get("Authorization"):
         http_response(401, "Unauthorized!")
