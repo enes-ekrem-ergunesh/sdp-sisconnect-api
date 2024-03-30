@@ -53,6 +53,47 @@ def db_get_user_by_email_sc(email):
         http_response(500, "An error occurred while getting the user credentials from database.")
 
 
+def db_get_user_by_id_sc(user_id):
+    """
+    Get a user by id
+
+    Args:
+    user_id (int): the id of the user
+
+    Returns:
+    dict: user data
+    """
+
+    # get a connection to the database (sisConnect)
+    connection = db.get_connection()
+    try:  # try to get the user by id
+        with connection:  # use the connection
+            with connection.cursor() as cursor:  # get a cursor
+                # get user as personnel
+                sql = """
+                select *
+                from users u
+                join personnels p on u.id = p.user_id
+                where u.id = %s;
+                """  # SQL query to get the user by id
+                cursor.execute(sql, user_id)  # execute the query
+                result = cursor.fetchone()  # get the result
+                if result:  # if the result is not None, return the result
+                    return result
+                else:  # if the result is None, get user as student
+                    sql = """
+                    select *
+                    from users u
+                    join students s on u.id = s.user_id
+                    where u.id = %s;
+                    """  # SQL query to get the user by id
+                    cursor.execute(sql, user_id)  # execute the query
+                    result = cursor.fetchone()  # get the result
+                    return result
+    except pymysql.MySQLError:  # handle exceptions
+        http_response(500, "An error occurred while getting the user credentials from database.")
+
+
 def db_get_user_by_email_h(email):
     """
     Search user by email in the personnel's and students tables in the harmony database
@@ -217,7 +258,7 @@ def db_append_user_fields_h(user):
     Args:
     user: dict
     """
-    user_h = db_get_user_by_email_h(request.json["email"])
+    user_h = db_get_user_by_email_h(user["email"])
     # append all the fields from user_h to user if not already present
     for key in user_h:
         if key not in user:
@@ -241,7 +282,7 @@ def db_append_user_fields_sc(user, email):
     user.pop("user_id")
 
 
-def first_time_login(user, email, password):
+def first_time_login(email, password):
     """
     Checks if the user exists in the harmony database and if the password is correct
 
@@ -300,7 +341,7 @@ def login():
         db_append_user_fields_h(user)  # get the user details from the harmony database
 
     else:  # if the user does not exist in the sisConnect database
-        first_time_login(user, request.json["email"], request.json["password"])  # login for the first time
+        first_time_login(request.json["email"], request.json["password"])  # login for the first time
 
         db_insert_user_sc(user)  # insert the user to the sisConnect database
 
@@ -349,3 +390,25 @@ def logout():
         http_response(500, "Database server error: " + str(e))
 
 
+@bp.route("/user/profile", methods=["GET"])
+def profile():
+    """
+    Gets the user profile
+
+    Prerequisites:
+    Headers: Authorization: Bearer
+
+    Returns:
+    dict: user profile
+    """
+
+    token = request.headers.get("Authorization").split(" ")[1]  # get the token
+    user_id = jwt.decode_token(token)["user_id"]  # get the user id from the token
+    user = db_get_user_by_id_sc(user_id)  # get the user by id from the sisConnect database
+    db_append_user_fields_h(user)  # get the user details from the harmony database
+    user.pop("password")  # remove the password from the user
+
+    return {
+        "status": 200,
+        "user": user
+    }
