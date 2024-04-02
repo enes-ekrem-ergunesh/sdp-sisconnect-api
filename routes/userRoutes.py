@@ -152,6 +152,9 @@ def db_insert_user_sc(user):
     db_insert_user_sc_as_user(user)  # Insert the user into the user table
     db_insert_user_sc_as_personnel_or_student(user)  # Insert the user into the personnel or student table
 
+    db_create_public_profile(user["user_id"])  # create a public profile for the user
+    db_create_administrative_profile(user["user_id"])  # create an administrative profile for the user
+
 
 def db_insert_user_sc_as_user(user):
     """
@@ -301,6 +304,51 @@ def first_time_login(email, password):
     if not bcrypt.check_password_hash(user["password"], password):
         http_response(400, "Invalid email or password.")
 
+    return user
+
+
+def db_create_public_profile(user_id):
+    """
+    Creates a public profile for the user
+
+    Args:
+    user_id: int
+    """
+    connection = db.get_connection()  # get a connection to the database (sisConnect)
+    try:  # try to create a public profile
+        with connection:  # use the connection
+            with connection.cursor() as cursor:  # get a cursor
+                # SQL query to create a public profile
+                sql = ("insert into profiles (user_id, profile_type_id, visibility_set_id)"
+                       "values (%s, 1, 1);")
+                cursor.execute(sql, (user_id,))  # execute the query
+                connection.commit()  # commit the changes
+    except pymysql.MySQLError as e:  # handle exceptions
+        http_response(500, "Database server error: " + str(e))
+
+
+def db_create_administrative_profile(user_id):
+    """
+    Creates an administrative profile for the user.
+
+    profile_type_id: 2 (administration view)
+    visibility_set_id: 3 (admin only)
+
+    Args:
+    user_id: int
+    """
+    connection = db.get_connection()  # get a connection to the database (sisConnect)
+    try:  # try to create an administrative profile
+        with connection:  # use the connection
+            with connection.cursor() as cursor:  # get a cursor
+                # SQL query to create a administrative profile
+                sql = ("insert into profiles (user_id, profile_type_id, visibility_set_id)"
+                       "values (%s, 2, 3);")
+                cursor.execute(sql, (user_id,))  # execute the query
+                connection.commit()  # commit the changes
+    except pymysql.MySQLError as e:  # handle exceptions
+        http_response(500, "Database server error: " + str(e))
+
 
 @bp.route("/user/hello", methods=["GET"])
 def greet():
@@ -341,7 +389,7 @@ def login():
         db_append_user_fields_h(user)  # get the user details from the harmony database
 
     else:  # if the user does not exist in the sisConnect database
-        first_time_login(request.json["email"], request.json["password"])  # login for the first time
+        user = first_time_login(request.json["email"], request.json["password"])  # login for the first time
 
         db_insert_user_sc(user)  # insert the user to the sisConnect database
 
