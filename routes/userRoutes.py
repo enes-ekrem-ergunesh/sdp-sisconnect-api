@@ -361,6 +361,26 @@ def greet():
     }
 
 
+@bp.route("/user/verify", methods=["GET"])
+def verify():
+    """
+    Verifies the user
+
+    Prerequisites:
+    Headers: Authorization: Bearer <token>
+
+    Returns:
+    dict: user_id
+    """
+
+    token = request.headers.get("Authorization").split(" ")[1]
+    user_id = jwt.decode_token(token)["user_id"]
+    return {
+        "status": 200,
+        "user_id": user_id
+    }
+
+
 @bp.route("/user/login", methods=["POST"])
 def login():
     """
