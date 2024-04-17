@@ -25,19 +25,6 @@ def hello_world():
             return {"message": result['message'] + " (from Flask)"}
 
 
-# route test bcrypt
-@app.route("/bcrypt")
-def test_bcrypt():
-    password = 'my password'
-    my_hash = bcrypt.generate_password_hash(password)
-    verify = bcrypt.check_password_hash(my_hash, password)
-
-    wrong_password = 'my password!'
-    wrong_hash = bcrypt.generate_password_hash(password)
-    wrong_verify = bcrypt.check_password_hash(wrong_hash, wrong_password)
-    return "<p>" + str(my_hash) + "</p><p>" + str(verify) + "</p><p>" + str(wrong_verify) + "</p>"
-
-
 @app.before_request
 def check_authorization():
     no_auth_routes = ["/", "/user/hello", "/user/login"]
