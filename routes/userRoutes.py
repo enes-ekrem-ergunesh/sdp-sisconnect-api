@@ -6,6 +6,8 @@ import helpers.jwt_token as jwt
 import datetime
 import pymysql
 
+import db.userDao as userDao
+
 bp = Blueprint('user', __name__)
 bcrypt = Bcrypt()
 
@@ -267,7 +269,8 @@ def db_append_user_fields_h(user):
         if key not in user:
             user[key] = user_h[key]
     # remove unnecessary user_id field
-    user.pop("user_id")
+    if "user_id" in user:
+        user.pop("user_id")
 
 
 def db_append_user_fields_sc(user, email):
@@ -456,6 +459,28 @@ def logout():
                 }
     except pymysql.MySQLError as e:  # handle exceptions
         http_response(500, "Database server error: " + str(e))
+
+
+@bp.route("/user", methods=["GET"])
+def get_user():
+    """
+    Gets the user
+    """
+
+    _user_id = jwt.decode_token(request.headers.get("Authorization").split(" ")[1])["user_id"]
+    user = userDao.get_user_by_id(_user_id)
+
+    db_append_user_fields_h(user)
+
+    sensitive_fields = [
+        "password", "created_at", "deleted_at", "updated_at", "student_id"
+    ]
+
+    for field in sensitive_fields:
+        if field in user:
+            user.pop(field)
+
+    return user
 
 
 @bp.route("/user/profile", methods=["GET"])
