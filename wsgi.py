@@ -4,13 +4,16 @@ from flask_cors import CORS
 from helpers.jwt_token import decode_token, verify_token
 from helpers.http_response import http_response
 import db.dbConnections as sCDB
+
 import routes.userRoutes
+import routes.profileRoutes
 
 app = Flask(__name__)
 CORS(app)  # Apply CORS for all routes
 bcrypt = Bcrypt(app)
 
 app.register_blueprint(routes.userRoutes.bp)
+app.register_blueprint(routes.profileRoutes.bp)
 
 
 @app.route("/")
