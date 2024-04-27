@@ -80,3 +80,13 @@ def db_verify_token(token, user_id):
 
     except Exception as e:  # handle exceptions
         return str(e)  # return the exception as a string
+
+
+def get_user(request):
+    """
+    Get the user from the token
+
+    Returns:
+    dict: user
+    """
+    return decode_token(request.headers.get("Authorization").split(" ")[1])["user_id"]
