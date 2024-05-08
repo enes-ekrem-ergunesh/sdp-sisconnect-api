@@ -130,6 +130,8 @@ def login():
 
         userDao.append_user_fields(user, request.json["email"])  # get the user details from the sisConnect database
 
+        userDao.insert_user_about_fields(user)  # insert the user about fields to the sisConnect database
+
     # check if the password is correct
     if not bcrypt.check_password_hash(user["password"], request.json["password"]):
         http_response(400, "Invalid email or password.")
@@ -182,6 +184,27 @@ def get_user():
     return user
 
 
+@bp.route("/user/<int:user_id>", methods=["GET"])
+def get_user_by_id(user_id):
+    """
+    Gets the user
+    """
+
+    user = userDao.get_user_by_id(user_id)
+
+    harmonyDao.append_user_fields(user)
+
+    sensitive_fields = [
+        "password", "created_at", "deleted_at", "updated_at", "student_id"
+    ]
+
+    for field in sensitive_fields:
+        if field in user:
+            user.pop(field)
+
+    return user
+
+
 @bp.route("/user/profile", methods=["GET"])
 def profile():
     """
@@ -202,4 +225,38 @@ def profile():
 
     return {
         "user": user
+    }
+
+
+# search for users route <string:search>
+@bp.route("/user/search/<string:search>", methods=["GET"])
+def search_users(search):
+    """
+    Search for users
+
+    Args:
+    search: str
+
+    Returns:
+    list: users
+    """
+
+    _search_users = harmonyDao.search_users(search)
+    print(_search_users)
+    registered_users = userDao.get_registered_users()
+    print(registered_users)
+    users = []
+
+    for user in _search_users:
+        for registered_user in registered_users:
+            if user["table"] == "personnels":
+                if user["id"] == registered_user["personnel_id"]:
+                    user["user_id"] = registered_user["user_id"]
+                    users.append(user)
+            if user["table"] == "students":
+                if user["id"] == registered_user["student_id"]:
+                    user["user_id"] = registered_user["user_id"]
+                    users.append(user)
+    return {
+        "users": users
     }

@@ -66,3 +66,58 @@ def get_user_by_email(email):
 
     except pymysql.MySQLError:  # handle exceptions
         http_response(500, "An error occurred while searching the user credentials from database.")
+
+
+def search_users(search):
+    """
+    Search users by search in the personnel's and students tables in the harmony database
+
+    Args:
+    search (str): the keyword to search
+
+    Returns:
+    list: list of user data
+    """
+    search_string = f"%{search}%"
+
+    # get a connection to the database (harmony)
+    connection = db.get_harmony_connection()
+    try:  # try to search the user by keyword
+        with connection:  # use the connection
+            with connection.cursor() as cursor:  # get a cursor
+                sql = """
+                select *
+                from personnels
+                where school_email like %s
+                or first_name like %s
+                or family_name like %s
+                or concat(first_name, ' ', family_name) like %s
+                ;
+                """  # SQL query to search the user by keyword
+                cursor.execute(sql, (search_string, search_string, search_string, search_string))  # execute the query
+                results = cursor.fetchall()  # get the results
+                for result in results:
+                    # add table name to the result
+                    result["table"] = "personnels"
+                sql = """
+                select *
+                from students
+                where email like %s
+                or first_name like %s
+                or family_name like %s
+                or concat(first_name, ' ', family_name) like %s
+                ;
+                """  # SQL query to search the user by keyword
+                cursor.execute(sql, (search_string, search_string, search_string, search_string))  # execute the query
+                student_results = cursor.fetchall()
+                for result in student_results:
+                    # add table name to the result
+                    result["table"] = "students"
+                if results:
+                    results += student_results  # get the results
+                else:
+                    results = student_results
+                return results
+
+    except pymysql.MySQLError:  # handle exceptions
+        http_response(500, "An error occurred while searching the user credentials from database.")

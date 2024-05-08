@@ -3,6 +3,28 @@ import db.dbConnections as db
 from helpers.http_response import http_response
 
 
+def get_registered_users():
+    """
+    Retrieves all the registered users
+    """
+    connection = db.get_connection()
+    try:
+        with connection:
+            with connection.cursor() as cursor:
+                sql = """
+                select u.id as user_id,
+                       p.id as personnel_id,
+                       s.id as student_id
+                from users u
+                left join personnels p on u.id = p.user_id
+                left join students s on u.id = s.user_id
+                """
+                cursor.execute(sql)
+                return cursor.fetchall()
+    except pymysql.MySQLError as e:
+        db.http_response(500, "Internal Server Error: " + str(e))
+
+
 def get_user_by_id(user_id):
     """
     Retrieves a user by user id
@@ -104,8 +126,47 @@ def insert_user(user):
     insert_user_as_user(user)  # Insert the user into the user table
     insert_user_as_personnel_or_student(user)  # Insert the user into the personnel or student table
 
-    create_public_profile(user["user_id"])  # create a public profile for the user
-    create_administrative_profile(user["user_id"])  # create an administrative profile for the user
+    user["public_profile_id"] = create_public_profile(user["user_id"])  # create a public profile for the user
+    user["administrative_profile_id"] = create_administrative_profile(
+        user["user_id"])  # create an administrative profile for the user
+
+
+def insert_user_about_fields(user):
+    """
+    Inserts the user about fields into the database
+
+    Args:
+    user: dict
+    """
+    is_personnel = False
+    if "personnel_id" in user:
+        is_personnel = True
+    connection = db.get_connection()  # get a connection to the database (sisConnect)
+    try:  # try to insert the user about fields
+        with connection:  # use the connection
+            with connection.cursor() as cursor:  # get a cursor
+                # SQL query to insert the user about fields
+                sql = (f"""
+                    insert into profile_field_data (profile_id, profile_field_type_id, data)
+                    values 
+                        ({user["public_profile_id"]}, 15, %s),
+                        ({user["public_profile_id"]}, 13, %s),
+                        ({user["public_profile_id"]}, 6, %s),
+                        ({user["public_profile_id"]}, 14, %s);
+                """)
+                cursor.execute(
+                    sql,
+                    (
+                        user["school_email"] if is_personnel else user["email"],
+                        user["gender"],
+                        user["birthdate"],
+                        None if is_personnel else user["address"]
+                    )
+                )  # execute the query
+            connection.commit()  # commit the changes
+            delete_null_about_fields()
+    except pymysql.MySQLError as e:  # handle exceptions
+        http_response(500, "Database server error: " + str(e))
 
 
 def insert_user_as_user(user):
@@ -225,7 +286,9 @@ def create_public_profile(user_id):
                 sql = ("insert into profiles (user_id, profile_type_id, visibility_set_id)"
                        "values (%s, 1, 1);")
                 cursor.execute(sql, (user_id,))  # execute the query
+                last_id = cursor.lastrowid
                 connection.commit()  # commit the changes
+                return last_id
     except pymysql.MySQLError as e:  # handle exceptions
         http_response(500, "Database server error: " + str(e))
 
@@ -248,6 +311,25 @@ def create_administrative_profile(user_id):
                 sql = ("insert into profiles (user_id, profile_type_id, visibility_set_id)"
                        "values (%s, 2, 3);")
                 cursor.execute(sql, (user_id,))  # execute the query
+                last_id = cursor.lastrowid
+                connection.commit()  # commit the changes
+                return last_id
+    except pymysql.MySQLError as e:  # handle exceptions
+        http_response(500, "Database server error: " + str(e))
+
+
+def delete_null_about_fields():
+    """
+    Deletes the null about fields from the database
+    """
+    connection = db.get_connection()  # get a connection to the database (sisConnect)
+    try:  # try to delete the null about fields
+        with connection:  # use the connection
+            with connection.cursor() as cursor:  # get a cursor
+                # SQL query to delete the null about fields
+                sql = "delete from profile_field_data where data is null;"
+                cursor.execute(sql)  # execute the query
                 connection.commit()  # commit the changes
     except pymysql.MySQLError as e:  # handle exceptions
         http_response(500, "Database server error: " + str(e))
+
