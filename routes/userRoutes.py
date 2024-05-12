@@ -241,6 +241,8 @@ def search_users(search):
     list: users
     """
 
+    user_id = jwt.get_user(request)
+
     _search_users = harmonyDao.search_users(search)
     print(_search_users)
     registered_users = userDao.get_registered_users()
@@ -249,6 +251,8 @@ def search_users(search):
 
     for user in _search_users:
         for registered_user in registered_users:
+            if registered_user["user_id"] == user_id:
+                continue
             if user["table"] == "personnels":
                 if user["id"] == registered_user["personnel_id"]:
                     user["user_id"] = registered_user["user_id"]

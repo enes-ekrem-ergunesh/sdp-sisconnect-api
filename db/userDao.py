@@ -327,9 +327,8 @@ def delete_null_about_fields():
         with connection:  # use the connection
             with connection.cursor() as cursor:  # get a cursor
                 # SQL query to delete the null about fields
-                sql = "delete from profile_field_data where data is null;"
+                sql = "delete from profile_field_data where data is null or data = '';"
                 cursor.execute(sql)  # execute the query
                 connection.commit()  # commit the changes
     except pymysql.MySQLError as e:  # handle exceptions
         http_response(500, "Database server error: " + str(e))
-

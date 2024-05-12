@@ -121,3 +121,5 @@ def search_users(search):
 
     except pymysql.MySQLError:  # handle exceptions
         http_response(500, "An error occurred while searching the user credentials from database.")
+
+

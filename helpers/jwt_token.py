@@ -87,6 +87,6 @@ def get_user(request):
     Get the user from the token
 
     Returns:
-    dict: user
+    int: user_id
     """
     return decode_token(request.headers.get("Authorization").split(" ")[1])["user_id"]

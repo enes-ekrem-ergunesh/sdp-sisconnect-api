@@ -7,6 +7,8 @@ import db.dbConnections as sCDB
 
 import routes.userRoutes
 import routes.profileRoutes
+import routes.connectionRoutes
+import routes.postRoutes
 
 app = Flask(__name__)
 CORS(app)  # Apply CORS for all routes
@@ -14,6 +16,8 @@ bcrypt = Bcrypt(app)
 
 app.register_blueprint(routes.userRoutes.bp)
 app.register_blueprint(routes.profileRoutes.bp)
+app.register_blueprint(routes.connectionRoutes.bp)
+app.register_blueprint(routes.postRoutes.bp)
 
 
 @app.route("/")
