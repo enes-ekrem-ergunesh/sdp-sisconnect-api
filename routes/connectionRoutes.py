@@ -79,6 +79,19 @@ def get_connections_by_user_id(user_id):
         return []
 
 
+@bp.route("/connection/auth", methods=["GET"])
+def get_connections_by_auth():
+    """
+    Get all connections by user id
+    """
+    user_id = jwt.get_user(request)
+    connections = connectionDao.get_connections_by_user_id(user_id)
+    if connections:
+        return connections
+    else:
+        return []
+
+
 @bp.route("/connection/<int:connection_id>", methods=["GET"])
 def get_connection_by_id(connection_id):
     """

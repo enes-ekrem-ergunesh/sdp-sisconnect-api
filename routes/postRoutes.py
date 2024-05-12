@@ -4,6 +4,7 @@ import helpers.jwt_token as jwt
 import datetime
 
 import db.postDao as postDao
+import db.harmonyDao as harmonyDao
 
 bp = Blueprint('post', __name__)
 
@@ -105,6 +106,9 @@ def get_all_posts_of_connections():
     if posts:
         for post in posts:
             post["time_ago"] = time_ago(post.get("created_at"))
+            user = harmonyDao.get_user_by_email(post.get("email"))
+            post["first_name"] = user.get("first_name")
+            post["family_name"] = user.get("family_name")
         return posts
     else:
         return []

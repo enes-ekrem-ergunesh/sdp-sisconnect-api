@@ -74,9 +74,10 @@ def get_all_posts_of_connections(user_id):
         with connection:
             with connection.cursor() as cursor:
                 sql = """
-                select p.*
+                select p.*, u.email
                 from posts p
                 join connections c on p.user_id = c.connected_user_id
+                join users u on p.user_id = u.id
                 where c.user_id = %s
                 and c.accepted_at is not null
                 and c.blocked = 0
