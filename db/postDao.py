@@ -101,10 +101,10 @@ def create_post(user_id, post):
         with connection:
             with connection.cursor() as cursor:
                 sql = """
-                insert into posts (user_id, content)
-                values (%s, %s);
+                insert into posts (user_id, content, visibility_id)
+                values (%s, %s, %s);
                 """
-                cursor.execute(sql, (user_id, post["content"]))
+                cursor.execute(sql, (user_id, post["content"], post["visibility_id"]))
                 connection.commit()
                 return cursor.lastrowid
     except pymysql.MySQLError as e:

@@ -127,8 +127,6 @@ def insert_user(user):
     insert_user_as_personnel_or_student(user)  # Insert the user into the personnel or student table
 
     user["public_profile_id"] = create_public_profile(user["user_id"])  # create a public profile for the user
-    user["administrative_profile_id"] = create_administrative_profile(
-        user["user_id"])  # create an administrative profile for the user
 
 
 def insert_user_about_fields(user):
@@ -203,12 +201,12 @@ def insert_user_as_personnel_or_student(user):
             with connection.cursor() as cursor:  # get a cursor
                 if user["table"] == "personnels":
                     # SQL query to insert the user
-                    sql = "INSERT INTO `personnels` (`id`, `user_id`) VALUES (%s, %s)"
-                    cursor.execute(sql, (user["id"], user["user_id"]))  # execute the query
+                    sql = "INSERT INTO `personnels` (`h_personnel_id`, `user_id`) VALUES (%s, %s)"
+                    cursor.execute(sql, (user["h_personnel_id"], user["user_id"]))  # execute the query
                     connection.commit()
                 elif user["table"] == "students":
                     # SQL query to insert the user
-                    sql = "INSERT INTO `students` (`id`, `user_id`) VALUES (%s, %s)"
+                    sql = "INSERT INTO `students` (`h_student_id`, `user_id`) VALUES (%s, %s)"
                     cursor.execute(sql, (user["id"], user["user_id"]))
                     connection.commit()
     except pymysql.MySQLError as e:  # handle exceptions
@@ -283,33 +281,8 @@ def create_public_profile(user_id):
         with connection:  # use the connection
             with connection.cursor() as cursor:  # get a cursor
                 # SQL query to create a public profile
-                sql = ("insert into profiles (user_id, profile_type_id, visibility_set_id)"
-                       "values (%s, 1, 1);")
-                cursor.execute(sql, (user_id,))  # execute the query
-                last_id = cursor.lastrowid
-                connection.commit()  # commit the changes
-                return last_id
-    except pymysql.MySQLError as e:  # handle exceptions
-        http_response(500, "Database server error: " + str(e))
-
-
-def create_administrative_profile(user_id):
-    """
-    Creates an administrative profile for the user.
-
-    profile_type_id: 2 (administration view)
-    visibility_set_id: 3 (admin only)
-
-    Args:
-    user_id: int
-    """
-    connection = db.get_connection()  # get a connection to the database (sisConnect)
-    try:  # try to create an administrative profile
-        with connection:  # use the connection
-            with connection.cursor() as cursor:  # get a cursor
-                # SQL query to create a administrative profile
-                sql = ("insert into profiles (user_id, profile_type_id, visibility_set_id)"
-                       "values (%s, 2, 3);")
+                sql = ("insert into profiles (user_id)"
+                       "values (%s);")
                 cursor.execute(sql, (user_id,))  # execute the query
                 last_id = cursor.lastrowid
                 connection.commit()  # commit the changes
@@ -327,7 +300,7 @@ def delete_null_about_fields():
         with connection:  # use the connection
             with connection.cursor() as cursor:  # get a cursor
                 # SQL query to delete the null about fields
-                sql = "delete from profile_field_data where data is null or data = '';"
+                sql = "delete from profile_fields where data is null or data = '';"
                 cursor.execute(sql)  # execute the query
                 connection.commit()  # commit the changes
     except pymysql.MySQLError as e:  # handle exceptions

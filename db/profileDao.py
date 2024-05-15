@@ -13,7 +13,7 @@ def get_profile_about_fields_by_profile_id(profile_id):
                 select pfd.*,
                     pft.name as profile_field_type_name,
                     pft.data_type as profile_field_type_data_type
-                from profile_field_data pfd
+                from profile_fields pfd
                 join profile_field_types pft on pfd.profile_field_type_id = pft.id
                 where pfd.profile_id = %s
                 and pfd.deleted_at is null
@@ -78,7 +78,7 @@ def get_empty_profile_field_types_by_profile_id(profile_id):
                 from profile_field_types
                 where id not in (select pft.id
                                  from profile_field_types pft
-                                          join profile_field_data pfd on pft.id = pfd.profile_field_type_id
+                                          join profile_fields pfd on pft.id = pfd.profile_field_type_id
                                  where pfd.profile_id = %s
                                    and pfd.deleted_at is null
                                    and pfd.data is not null
@@ -100,7 +100,7 @@ def update_profile_about_fields(profile_about_fields, user_id):
         with connection:
             with connection.cursor() as cursor:
                 sql = """
-                update profile_field_data pfd
+                update profile_fields pfd
                 set pfd.data = %s, pfd.deleted_at = %s
                 where pfd.id = %s
                   and (select u.id
@@ -131,7 +131,7 @@ def insert_profile_about_fields(profile_about_field, user_id):
         with connection:
             with connection.cursor() as cursor:
                 sql = """
-                insert into profile_field_data (profile_id, profile_field_type_id, data)
+                insert into profile_fields (profile_id, profile_field_type_id, data)
                 values ((select p.id
                          from profiles p
                          where p.user_id = %s
