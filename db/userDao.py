@@ -1,6 +1,8 @@
 import pymysql
 import db.dbConnections as db
 from helpers.http_response import http_response
+import json
+import time
 
 
 def get_registered_users():
@@ -139,13 +141,14 @@ def insert_user_about_fields(user):
     is_personnel = False
     if "personnel_id" in user:
         is_personnel = True
+    # user["birthdate"] = time.mktime(time.strptime(user["birthdate"], "%Y-%m-%d"))
     connection = db.get_connection()  # get a connection to the database (sisConnect)
     try:  # try to insert the user about fields
         with connection:  # use the connection
             with connection.cursor() as cursor:  # get a cursor
                 # SQL query to insert the user about fields
                 sql = (f"""
-                    insert into profile_field_data (profile_id, profile_field_type_id, data)
+                    insert into profile_fields (profile_id, profile_field_type_id, data)
                     values 
                         ({user["public_profile_id"]}, 15, %s),
                         ({user["public_profile_id"]}, 13, %s),
@@ -155,10 +158,10 @@ def insert_user_about_fields(user):
                 cursor.execute(
                     sql,
                     (
-                        user["school_email"] if is_personnel else user["email"],
-                        user["gender"],
-                        user["birthdate"],
-                        None if is_personnel else user["address"]
+                        json.dumps([user["school_email"]]) if is_personnel else json.dumps([user["email"]]),
+                        json.dumps([user["gender"]]),
+                        json.dumps([str(user["birthdate"])]),
+                        None if is_personnel else json.dumps([user["address"]])
                     )
                 )  # execute the query
             connection.commit()  # commit the changes
@@ -202,7 +205,7 @@ def insert_user_as_personnel_or_student(user):
                 if user["table"] == "personnels":
                     # SQL query to insert the user
                     sql = "INSERT INTO `personnels` (`h_personnel_id`, `user_id`) VALUES (%s, %s)"
-                    cursor.execute(sql, (user["h_personnel_id"], user["user_id"]))  # execute the query
+                    cursor.execute(sql, (user["id"], user["user_id"]))  # execute the query
                     connection.commit()
                 elif user["table"] == "students":
                     # SQL query to insert the user

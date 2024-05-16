@@ -3,7 +3,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from helpers.jwt_token import decode_token, verify_token
 from helpers.http_response import http_response
-import db.dbConnections as sCDB
+from importlib import import_module
 
 import routes.userRoutes
 import routes.profileRoutes
@@ -19,22 +19,42 @@ app.register_blueprint(routes.profileRoutes.bp)
 app.register_blueprint(routes.connectionRoutes.bp)
 app.register_blueprint(routes.postRoutes.bp)
 
+# Interface-based imports and routes
+basePath = "routes.interface_based"
+
+for blueprint_name in ["commentRoutes",
+                       "groupRoutes",
+                       "notificationRoutes",
+                       "post_attachment_type_extensionRoutes",
+                       "post_interactionRoutes",
+                       "profile_fieldRoutes",
+                       "tokenRoutes",
+                       "userRoutes",
+                       "connectionRoutes",
+                       "messageRoutes",
+                       "post_attachmentRoutes",
+                       "post_attachment_typeRoutes",
+                       "postRoutes",
+                       "profileRoutes",
+                       "user_groupRoutes"
+                       ]:
+    # Import the blueprint module
+    blueprint_module = import_module(f"{basePath}.{blueprint_name}")
+    # Register the blueprint from the imported module
+    app.register_blueprint(blueprint_module.bp)
+
 
 @app.route("/")
 def hello_world():
-    connection = sCDB.get_connection()
-    with connection:
-        with connection.cursor() as cursor:
-            # Read a single record
-            sql = "select message from sisconnect.hello_world where id = %s"
-            cursor.execute(sql, (1,))
-            result = cursor.fetchone()
-            return {"message": result['message'] + " (from Flask)"}
+    return {"message": "Hello, World!"}
 
 
 @app.before_request
 def check_authorization():
-    no_auth_routes = ["/", "/user/hello", "/user/login"]
+    no_auth_routes = [
+        "/", "/user/hello", "/user/login",
+        "/ib_comment/hello"
+    ]
     if request.path in no_auth_routes:
         return
 
