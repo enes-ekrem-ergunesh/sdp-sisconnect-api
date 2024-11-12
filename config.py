@@ -6,6 +6,13 @@ config.json file structure:
     "USER": "<user>",
     "PASSWORD": "<password>",
     "DATABASE": "<database>",
+
+    "HARMONY_HOST": "<host>",
+    "HARMONY_PORT": <port>,
+    "HARMONY_USER": "<user>",
+    "HARMONY_PASSWORD": "<password>",
+    "HARMONY_DATABASE": "<database>",
+
     "SECRET": "<secret>"
 }
 """
@@ -25,6 +32,13 @@ def load_config():
         "USER": os.getenv("USER"),
         "PASSWORD": os.getenv("PASSWORD"),
         "DATABASE": os.getenv("DATABASE"),
+
+        "HARMONY_HOST": os.getenv("HARMONY_HOST"),
+        "HARMONY_PORT": os.getenv("HARMONY_PORT"),
+        "HARMONY_USER": os.getenv("HARMONY_USER"),
+        "HARMONY_PASSWORD": os.getenv("HARMONY_PASSWORD"),
+        "HARMONY_DATABASE": os.getenv("HARMONY_DATABASE"),
+
         "SECRET": os.getenv("SECRET"),
     }
 
