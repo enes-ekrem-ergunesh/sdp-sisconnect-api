@@ -33,3 +33,20 @@ class HarmonyStudentList(Resource):
         if not response:
             ns.abort(404, "No harmony students found")
         return response
+
+def get_student_by_email(email):
+    response = dao.get_by_email(email)
+    if not response:
+        return None
+    return response
+
+@ns.route('/<string:email>')
+class HarmonyStudentByEmail(Resource):
+    @ns.doc('get_student_by_email')
+    @ns.marshal_with(h_student)
+    def get(self, email):
+        """Get student by email"""
+        response = get_student_by_email(email)
+        if not response:
+            ns.abort(404, "Student not found")
+        return response

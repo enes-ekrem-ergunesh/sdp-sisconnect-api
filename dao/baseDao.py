@@ -37,10 +37,13 @@ def print_pool_status():
 
 def get_connection(database):
     if database == 'sis':
+        print("SIS CONNECTION")
         return pool1.get_connection()
     elif database == 'harmony':
+        print("HARMONY CONNECTION")
         return pool2.get_connection()
     else:
+        print("None CONNECTION")
         return None
 
 def execute_query(query, database, params=None):

@@ -7,4 +7,4 @@ class HarmonyPersonnelDAO(BaseDAO):
 
     def get_by_email(self, email):
         query = f"SELECT * FROM {self.table} WHERE school_email = %s"
-        return execute_query_single(query, (email,))
+        return execute_query_single(query, self.database, (email,))

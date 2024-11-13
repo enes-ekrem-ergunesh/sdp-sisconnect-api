@@ -15,7 +15,7 @@ h_personnel = ns.model('HarmonyPersonnel', {
     'password': fields.String(required=True, description='The password of the personnel'),
     'phone_numbers': fields.String(required=True, description='The phone numbers of the personnel'),
     'gender': fields.String(required=True, description='The gender of the personnel'),
-    'birthdate': fields.String(required=True, description='The birthdate of the personnel'),
+    'birthdate': fields.Date(required=True, description='The birthdate of the personnel'),
     'old_id': fields.String(required=True, description='The old id of the personnel'),
 })
 
