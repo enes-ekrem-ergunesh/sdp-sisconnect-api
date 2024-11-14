@@ -1,10 +1,23 @@
+# COPIED FROM FSL (OLD PROJECTS)
+## for flask to run
 Flask~=3.0.3
-flask-restx~=1.3.0
-pytz~=2024.2
-PyMySQL~=1.1.1
-pymysql-pool~=0.4.6
-Flask-Bcrypt~=1.0.1
-cryptography~=43.0.3
-PyJWT~=2.9.0
 Flask-Cors~=5.0.0
 gunicorn~=23.0.0
+
+## documentation
+flask-restx~=1.3.0
+
+## database
+PyMySQL~=1.1.1
+pymysql-pool~=0.4.6
+
+## JWT / tokenization
+PyJWT~=2.9.0
+cryptography~=43.0.3
+pytz~=2024.2
+
+## password hashing
+Flask-Bcrypt~=1.0.1
+
+# NEW WITH THIS PROJECT
+requests~=2.32.3
