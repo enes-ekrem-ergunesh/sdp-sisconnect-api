@@ -73,7 +73,9 @@ def execute_update(query, database, params=None):
     # print_pool_status()
     cur = connection.cursor()
     cur.execute(query, params)
+    last_id = cur.lastrowid
     connection.close()
+    return last_id
 
 
 class BaseDAO:
@@ -96,7 +98,7 @@ class BaseDAO:
         keys = ', '.join(data.keys())
         values = ', '.join(['%s'] * len(data))
         query = f"INSERT INTO {self.table} ({keys}) VALUES ({values})"
-        execute_update(query, database=self.database, params=tuple(data.values()))
+        return execute_update(query, database=self.database, params=tuple(data.values()))
 
     def update(self, record_id, data):
         set_clause = ', '.join([f"{key} = %s" for key in data.keys()])

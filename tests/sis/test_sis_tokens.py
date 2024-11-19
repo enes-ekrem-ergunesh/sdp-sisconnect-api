@@ -1,6 +1,5 @@
 import requests
 from tests.base_test import BaseTestCase
-import json
 
 
 class SisTokensTestCase(BaseTestCase):

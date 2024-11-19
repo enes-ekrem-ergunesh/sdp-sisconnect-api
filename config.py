@@ -13,7 +13,8 @@ config.json file structure:
     "HARMONY_PASSWORD": "<password>",
     "HARMONY_DATABASE": "<database>",
 
-    "SECRET": "<secret>"
+    "JWT_SECRET": "<jwt_secret>",
+    "GOOGLE_WEB_CLIENT_ID": "<google_web_client_id>"
 }
 """
 
@@ -39,7 +40,8 @@ def load_config():
         "HARMONY_PASSWORD": os.getenv("HARMONY_PASSWORD"),
         "HARMONY_DATABASE": os.getenv("HARMONY_DATABASE"),
 
-        "SECRET": os.getenv("SECRET"),
+        "JWT_SECRET": os.getenv("JWT_SECRET"),
+        "GOOGLE_WEB_CLIENT_ID": os.getenv("GOOGLE_WEB_CLIENT_ID"),
     }
 
     # Check if all environment variables are set
