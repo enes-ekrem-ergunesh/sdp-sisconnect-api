@@ -23,7 +23,8 @@ ns = Namespace('authentication', description='Authentication related operations'
 
 email_password_login_model = ns.model('EmailPasswordLogin', {
     'email': fields.String(required=True, description='User email'),
-    'password': fields.String(required=True, description='User password')
+    'password': fields.String(required=True, description='User password'),
+    'remember_me': fields.Boolean(required=True, description='Remember me')
 })
 
 google_login_model = ns.model('GoogleLogin', {
@@ -139,7 +140,7 @@ class EmailPasswordLogin(Resource):
 
         check_password(payload['email'], payload['password'])
 
-        token = generate_sis_token(payload['email'])
+        token = generate_sis_token(payload['email'], payload['remember_me'])
         token_id = insert_token(get_sis_user_by_email(payload['email'])['id'], token)
         token_info = token_dao.get_by_id(token_id)
 
