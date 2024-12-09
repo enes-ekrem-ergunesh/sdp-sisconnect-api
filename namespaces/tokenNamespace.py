@@ -1,3 +1,4 @@
+from flask import request
 from flask_restx import Namespace, Resource, fields
 import dao.tokenDao as tokenDao
 
@@ -74,9 +75,30 @@ def insert_token(user_id, token, token_type='sis'):
         ns.abort(400, "Token already exists")
         return None
 
+def validate_token(token):
+    token_info = dao.get_by_token(token)
+    if not token_info:
+        ns.abort(401, "Invalid token")
+        return None
+    if UTC.localize(token_info['valid_until']) < datetime.now(UTC):
+        ns.abort(401, "Token expired")
+        return None
+    if token_info['revoked_at']:
+        ns.abort(401, "Token revoked")
+        return None
+    return token_info['user_id']
+
+def revoke_token(token):
+    token_info = dao.get_by_token(token)
+    dao.update(token_info['id'], {'revoked_at': datetime.now(UTC)})
 
 @ns.route('/')
 class TokenInfo(Resource):
+    @ns.doc('verify_token')
+    def get(self):
+        """Verify token (using middleware in wsgi file)"""
+        return {"message": "Token is valid"}
+
     @ns.doc('get_token_info')
     @ns.expect(token_model)
     @ns.marshal_with(token_info_model)
@@ -88,3 +110,10 @@ class TokenInfo(Resource):
         if not response:
             ns.abort(404, "Token not found")
         return response
+
+    @ns.doc('revoke_token')
+    def put(self):
+        """Revoke token"""
+        _token = request.headers.get('Authorization')
+        revoke_token(_token)
+        return {"message": "Token revoked successfully"}
