@@ -2,8 +2,8 @@ ALLOWED_ENDPOINTS = [
     'specs',
     'restx_doc.static',
     'doc',
-    'tokens_register',
-    'tokens_login'
+    'authentication_email_password_login',
+    'authentication_google_login'
 ]
 
 AUTHORIZATIONS = {
