@@ -120,7 +120,7 @@ def check_password(email, password):
 
     is_password_correct = bcrypt.check_password_hash(credentials['password'], password)
     if not is_password_correct:
-        ns.abort(401, "Incorrect password")
+        ns.abort(401, "Invalid email or password. Please try again.")
 
 
 @ns.route('/')
@@ -131,10 +131,15 @@ class EmailPasswordLogin(Resource):
     def post(self):
         """Login with email and password"""
         payload = ns.payload
+        print('PAYLOAD', payload)
+
+        # Check if email and password are provided
+        if not payload['password'] or not payload['email'] or payload['email'] == '' or payload['password'] == '':
+            ns.abort(400, "Email and password are required")
 
         if not is_existing_sis_account(payload['email']):
             if not is_existing_harmony_account(payload['email']):
-                ns.abort(404, "No account found with this email")
+                ns.abort(401, "Invalid email or password. Please try again.")
             else:
                 first_time_login(payload['email'])
 
