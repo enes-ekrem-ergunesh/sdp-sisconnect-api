@@ -1,17 +1,29 @@
-from flask import Flask
+from flask import Flask, request, abort
+from flask_cors import CORS
 from flask_restx import Api
+from werkzeug.middleware.proxy_fix import ProxyFix
 
+from constants import *
 from namespaces.userNamespace import ns as user_namespace
 from namespaces.harmonyPersonnelNamespace import ns as harmony_personnel_namespace
 from namespaces.harmonyStudentNamespace import ns as harmony_student_namespace
 from namespaces.tokenNamespace import ns as token_namespace
 from namespaces.authenticationNamespace import ns as authentication_namespace
 
+from namespaces.tokenNamespace import validate_token
+
 app = Flask(__name__)
 app.config['ERROR_404_HELP'] = False # Disable error help messages from flask-restx (uncomment on production)
 
-api = Api(app, version='1.0', title='SIS Connect API',
+CORS(app)
+
+api = Api(
+    app,
+    version='1.0',
+    title='SIS Connect API',
     description='A simple API',
+    authorizations=AUTHORIZATIONS,
+    security='JWT Token',
 )
 
 api.add_namespace(user_namespace)
@@ -19,6 +31,27 @@ api.add_namespace(harmony_personnel_namespace)
 api.add_namespace(harmony_student_namespace)
 api.add_namespace(token_namespace)
 api.add_namespace(authentication_namespace)
+
+
+@app.before_request
+def before_request():
+    # Allow all options requests (pre-flight requests for CORS)
+    if request.method == "OPTIONS":
+        return
+
+    if request.endpoint in ALLOWED_ENDPOINTS:
+        return
+
+    print("NOT ALLOWED ENDPOINT:", request.endpoint)
+    print("NOT ALLOWED request:", request)
+
+    _token = request.headers.get('Authorization')
+    if not _token:
+        abort(401, 'Token is missing')
+
+    user_id = validate_token(_token)
+
+    request.user_id = user_id
 
 if __name__ == '__main__':
     app.run(debug=True)
