@@ -16,6 +16,11 @@ from namespaces.tokenNamespace import validate_token
 app = Flask(__name__)
 app.config['ERROR_404_HELP'] = False # Disable error help messages from flask-restx (uncomment on production)
 
+if PROD:
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+    )
+
 CORS(app)
 
 api = Api(
