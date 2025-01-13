@@ -72,6 +72,18 @@ def insert_token(user_id, token, token_type='sis'):
     try:
         return dao.create(data)
     except IntegrityError:
+        # Token already exists
+        if token_type == 'google':
+            """ Google gives the same token for the same user if the token is not expired.
+            if user logs in with google and logs in again without logging out within the token expiration time,
+            the token will be the same. In this case, we will just give the same token for now. """
+            token_info = dao.get_by_token(token)
+            if token_info['user_id'] != user_id:
+                ns.abort(400, "Token already exists")
+                return None
+            token_info['revoked_at'] = None
+            dao.update(token_info['id'], token_info)
+            return dao.get_by_token(token)['id']
         ns.abort(400, "Token already exists")
         return None
 
