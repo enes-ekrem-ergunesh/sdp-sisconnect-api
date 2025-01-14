@@ -2,6 +2,7 @@ from flask import Flask, request, abort
 from flask_cors import CORS
 from flask_restx import Api, apidoc
 from werkzeug.middleware.proxy_fix import ProxyFix
+import logging
 
 from constants import *
 from namespaces.userNamespace import ns as user_namespace
@@ -12,6 +13,12 @@ from namespaces.authenticationNamespace import ns as authentication_namespace
 from namespaces.profileNamespace import ns as profile_namespace
 
 from namespaces.tokenNamespace import validate_token
+
+logging.basicConfig(
+    filename='app.log',
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 app = Flask(__name__)
 app.config['ERROR_404_HELP'] = False # Disable error help messages from flask-restx (uncomment on production)
