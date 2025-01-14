@@ -1,6 +1,6 @@
 from flask import Flask, request, abort
 from flask_cors import CORS
-from flask_restx import Api
+from flask_restx import Api, apidoc
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from constants import *
@@ -39,6 +39,23 @@ api.add_namespace(token_namespace)
 api.add_namespace(authentication_namespace)
 api.add_namespace(profile_namespace)
 
+@api.documentation
+def custom_ui():
+    return apidoc.ui_for(api) + """
+    <style>
+        @media (prefers-color-scheme: dark) {
+            html {
+                filter: invert(1);
+            }
+            .backdrop-ux {
+                background: rgba(220,220,220,.9) !important;
+            }
+            .modal-ux {
+                box-shadow: 0 10px 30px 0 rgb(0 0 0 / 5%) !important;
+            }
+        }
+    </style>
+    """
 
 @app.before_request
 def before_request():
