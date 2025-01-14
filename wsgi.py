@@ -53,6 +53,8 @@ def custom_ui():
             .modal-ux {
                 box-shadow: 0 10px 30px 0 rgb(0 0 0 / 5%) !important;
             }
+            .microlight {
+                filter: invert(1);
         }
     </style>
     """
