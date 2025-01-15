@@ -22,13 +22,19 @@ profile_info_model = ns.model('Profile Info', {
 
 def collect_profile_info(user_id):
     _id = dao.get_by_user_id(user_id)['id']
-    email = user_dao.get_by_id(user_id)['email']
+    user = user_dao.get_by_id(user_id)
+    email = user['email']
+    if get_personnel_by_email(email):
+        harmony_data = get_personnel_by_email(email)
+    else:
+        harmony_data = get_student_by_email(email)
     profile_info = {
         'id': _id,
         'user_id': user_id,
         'email': email,
-        'first_name': get_personnel_by_email(email)['first_name'] if get_personnel_by_email(email) else get_student_by_email(email)['first_name'],
-
+        'first_name': harmony_data['first_name'],
+        'last_name': harmony_data['family_name'],
+        'is_admin': user['is_admin']
     }
 
     return profile_info
@@ -41,4 +47,4 @@ class ProfileInfo(Resource):
     def get(self, user_id):
         """Get profile by user id"""
         profile_info = collect_profile_info(user_id)
-        return {"message": profile_info}
+        return profile_info
