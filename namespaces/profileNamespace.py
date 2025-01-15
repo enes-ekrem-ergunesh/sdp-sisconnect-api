@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, abort
 from flask_restx import Namespace, Resource, fields
 import dao.profileDao as profileDao
 import dao.userDao as userDao
@@ -21,6 +21,8 @@ profile_info_model = ns.model('Profile Info', {
 })
 
 def collect_profile_info(user_id):
+    if not dao.get_by_user_id(user_id):
+        return None
     _id = dao.get_by_user_id(user_id)['id']
     user = user_dao.get_by_id(user_id)
     email = user['email']
@@ -47,4 +49,6 @@ class ProfileInfo(Resource):
     def get(self, user_id):
         """Get profile by user id"""
         profile_info = collect_profile_info(user_id)
+        if not profile_info:
+            abort(404, "Profile not found")
         return profile_info
