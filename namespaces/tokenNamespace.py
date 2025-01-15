@@ -104,6 +104,9 @@ def revoke_token(token):
     token_info = dao.get_by_token(token)
     dao.update(token_info['id'], {'revoked_at': datetime.now(UTC)})
 
+def get_token_info(token):
+    return dao.get_by_token(token)
+
 @ns.route('/')
 class TokenInfo(Resource):
     @ns.doc('verify_token')
@@ -118,7 +121,7 @@ class TokenInfo(Resource):
         """Get token info"""
         data = ns.payload
         print(data)
-        response = dao.get_by_token(data['token'])
+        response = get_token_info(data['token'])
         if not response:
             ns.abort(404, "Token not found")
         return response
