@@ -11,6 +11,7 @@ from namespaces.harmonyStudentNamespace import ns as harmony_student_namespace
 from namespaces.tokenNamespace import ns as token_namespace
 from namespaces.authenticationNamespace import ns as authentication_namespace
 from namespaces.profileNamespace import ns as profile_namespace
+from namespaces.profileFieldNamespace import ns as profile_field_namespace
 
 from namespaces.tokenNamespace import validate_token
 
@@ -45,6 +46,7 @@ api.add_namespace(harmony_student_namespace)
 api.add_namespace(token_namespace)
 api.add_namespace(authentication_namespace)
 api.add_namespace(profile_namespace)
+api.add_namespace(profile_field_namespace)
 
 @api.documentation
 def custom_ui():

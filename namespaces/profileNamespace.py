@@ -1,4 +1,4 @@
-from flask import request, abort
+from flask import abort
 from flask_restx import Namespace, Resource, fields
 import dao.profileDao as profileDao
 import dao.userDao as userDao
@@ -41,7 +41,10 @@ def collect_profile_info(user_id):
 
     return profile_info
 
-
+def create_profile(user_id):
+    return dao.create({
+        'user_id': user_id
+    })
 
 @ns.route('/<int:user_id>')
 class ProfileInfo(Resource):

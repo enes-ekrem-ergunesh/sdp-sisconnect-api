@@ -98,6 +98,7 @@ class BaseDAO:
         keys = ', '.join(data.keys())
         values = ', '.join(['%s'] * len(data))
         query = f"INSERT INTO {self.table} ({keys}) VALUES ({values})"
+        print (query)
         return execute_update(query, database=self.database, params=tuple(data.values()))
 
     def update(self, record_id, data):
