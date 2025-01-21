@@ -44,10 +44,16 @@ def generate_profile_field(profile_id, profile_field_type_id, value):
         'value': value
     }
 
+def get_profile_fields(profile_id):
+    response = dao.get_all_by_profile_id(profile_id)
+    if not response:
+        return []
+    return response
+
 @ns.route('/<int:profile_field_id>')
-class ProfileFieldById(Resource):
+class ProfileFieldsByFieldId(Resource):
     @ns.doc('get_profile_field')
-    @ns.marshal_with(profile_field_model)
+    @ns.marshal_list_with(profile_field_model)
     def get(self, profile_field_id):
         """Get profile field by id"""
         profile_field = get_profile_field(profile_field_id)
@@ -56,7 +62,7 @@ class ProfileFieldById(Resource):
         return profile_field
 
 @ns.route('/')
-class ProfileField(Resource):
+class ProfileFields(Resource):
     @ns.doc('create_profile_field')
     @ns.expect(profile_field_create_model)
     def post(self):
@@ -68,3 +74,11 @@ class ProfileField(Resource):
             }
         except Exception as e:
             abort(400, str(e))
+
+@ns.route('/profile/<int:profile_id>')
+class ProfileFieldsBy(Resource):
+    @ns.doc('get_profile_fields')
+    @ns.marshal_list_with(profile_field_model)
+    def get(self, profile_id):
+        """Get all profile fields for a profile"""
+        return get_profile_fields(profile_id)
