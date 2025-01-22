@@ -37,10 +37,12 @@ def print_pool_status():
 
 def get_connection(database):
     if database == 'sis':
-        print("SIS CONNECTION")
+        if not PROD:
+            print("SIS CONNECTION")
         return pool1.get_connection()
     elif database == 'harmony':
-        print("HARMONY CONNECTION")
+        if not PROD:
+            print("HARMONY CONNECTION")
         return pool2.get_connection()
     else:
         print("None CONNECTION")
@@ -54,7 +56,7 @@ def execute_query(query, database, params=None):
     cur.execute(query, params)
     output = cur.fetchall()
     connection.close()
-    print(output)
+    # print(output)
     return output
 
 def execute_query_single(query, database, params=None):
@@ -86,7 +88,8 @@ class BaseDAO:
 
     def get_all(self):
         query = f"SELECT * FROM {self.table}"
-        print(query)
+        if not PROD:
+            print(query)
         return execute_query(query, database=self.database)
 
     def get_by_id(self, record_id):
@@ -94,11 +97,13 @@ class BaseDAO:
         return execute_query_single(query, database=self.database, params=(record_id,))
 
     def create(self, data):
-        print("INSERTED ONCE")
+        if not PROD:
+            print("INSERTED ONCE")
         keys = ', '.join(data.keys())
         values = ', '.join(['%s'] * len(data))
         query = f"INSERT INTO {self.table} ({keys}) VALUES ({values})"
-        print (query)
+        if not PROD:
+            print (query)
         return execute_update(query, database=self.database, params=tuple(data.values()))
 
     def update(self, record_id, data):

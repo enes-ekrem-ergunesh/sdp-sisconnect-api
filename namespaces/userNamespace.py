@@ -1,6 +1,7 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 from namespaces.tokenNamespace import get_token_info
+from namespaces.profileNamespace import collect_profile_info, profile_info_model
 
 import dao.userDao as userDao
 
@@ -15,16 +16,27 @@ user_model = ns.model('User', {
     'is_admin': fields.Boolean(required=True, description='Is the user an admin?'),
 })
 
-@ns.route('/')
-class UserList(Resource):
-    @ns.doc('list_users')
-    @ns.marshal_list_with(user_model)
-    def get(self):
-        """List all users"""
-        response = dao.get_all()
-        if not response:
-            ns.abort(404, "No users found")
-        return response
+def search_users(search_term):
+    search_term = str.lower(search_term)
+    sis_users = dao.get_all()
+    search_results = []
+    for user in sis_users:
+        profile_info = collect_profile_info(user['id'])
+        if (search_term in str.lower(profile_info['first_name'])
+                or search_term in str.lower(profile_info['last_name']))\
+                or search_term in str.lower(user['email']):
+            search_results.append(profile_info)
+    return search_results
+
+
+@ns.route('/<string:search_term>')
+class UserSearch(Resource):
+    @ns.doc('search_users')
+    @ns.marshal_list_with(profile_info_model)
+    def get(self, search_term):
+        """Search for users by name or email"""
+        return search_users(search_term)
+
 
 @ns.route('/self')
 class UserSelf(Resource):

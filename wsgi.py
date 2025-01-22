@@ -78,7 +78,7 @@ def before_request():
         return
 
     print("NOT ALLOWED ENDPOINT:", request.endpoint)
-    print("NOT ALLOWED request:", request)
+    # print("NOT ALLOWED request:", request)
 
     _token = request.headers.get('Authorization')
     if not _token:
