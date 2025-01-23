@@ -21,6 +21,10 @@ def search_users(search_term):
     sis_users = dao.get_all()
     search_results = []
     for user in sis_users:
+        token = request.headers.get('Authorization')
+        token_info = get_token_info(token)
+        if user['id'] == token_info['user_id']:
+            continue
         profile_info = collect_profile_info(user['id'])
         if (search_term in str.lower(profile_info['first_name'])
                 or search_term in str.lower(profile_info['last_name']))\
