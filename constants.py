@@ -14,4 +14,4 @@ AUTHORIZATIONS = {
     }
 }
 
-PROD = False
+PROD = True
