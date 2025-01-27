@@ -1,5 +1,7 @@
-from flask import abort
+from flask import abort, request
 from flask_restx import Namespace, Resource, fields
+from namespaces.tokenNamespace import get_token_info
+
 import dao.profileDao as profileDao
 import dao.userDao as userDao
 from namespaces.harmonyStudentNamespace import get_student_by_email
@@ -52,6 +54,18 @@ class ProfileInfo(Resource):
     def get(self, user_id):
         """Get profile by user id"""
         profile_info = collect_profile_info(user_id)
+        if not profile_info:
+            abort(404, "Profile not found")
+        return profile_info
+
+@ns.route('/')
+class OwnProfileInfo(Resource):
+    @ns.doc('get_own_profile')
+    def get(self):
+        """Get own profile"""
+        token = request.headers.get('Authorization')
+        token_info = get_token_info(token)
+        profile_info = collect_profile_info(token_info['user_id'])
         if not profile_info:
             abort(404, "Profile not found")
         return profile_info
