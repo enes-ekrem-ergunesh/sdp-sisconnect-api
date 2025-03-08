@@ -1,7 +1,7 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 from namespaces.tokenNamespace import get_token_info
-from namespaces.profileNamespace import collect_profile_info, profile_info_model
+from namespaces.profileNamespace import collect_profile_info_by_user_id, profile_info_model
 
 import dao.userDao as userDao
 
@@ -25,7 +25,7 @@ def search_users(search_term):
         token_info = get_token_info(token)
         if user['id'] == token_info['user_id']:
             continue
-        profile_info = collect_profile_info(user['id'])
+        profile_info = collect_profile_info_by_user_id(user['id'])
         if (search_term in str.lower(profile_info['first_name'])
                 or search_term in str.lower(profile_info['last_name']))\
                 or search_term in str.lower(user['email']):
@@ -41,10 +41,20 @@ class UserSearch(Resource):
         """Search for users by name or email"""
         return search_users(search_term)
 
+@ns.route('/<int:user_id>')
+class User(Resource):
+    @ns.doc('get_user')
+    @ns.marshal_with(user_model)
+    def get(self, user_id):
+        """Get a user given its identifier"""
+        response = dao.get_by_id(user_id)
+        if not response:
+            ns.abort(404, "User not found")
+        return response
 
 @ns.route('/self')
 class UserSelf(Resource):
-    @ns.doc('get_user')
+    @ns.doc('get_current_user')
     @ns.marshal_with(user_model)
     def get(self):
         """Get the current user"""

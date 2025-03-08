@@ -12,8 +12,9 @@ from namespaces.tokenNamespace import ns as token_namespace
 from namespaces.authenticationNamespace import ns as authentication_namespace
 from namespaces.profileNamespace import ns as profile_namespace
 from namespaces.profileFieldNamespace import ns as profile_field_namespace
-from namespaces.connectionsNamespace import ns as connections_namespace
+from namespaces.connectionNamespace import ns as connections_namespace
 from namespaces.postNamespace import ns as post_namespace
+from namespaces.postLikeNamespace import ns as post_like_namespace
 
 from namespaces.tokenNamespace import validate_token
 
@@ -51,6 +52,7 @@ api.add_namespace(profile_namespace)
 api.add_namespace(profile_field_namespace)
 api.add_namespace(connections_namespace)
 api.add_namespace(post_namespace)
+api.add_namespace(post_like_namespace)
 
 @api.documentation
 def custom_ui():

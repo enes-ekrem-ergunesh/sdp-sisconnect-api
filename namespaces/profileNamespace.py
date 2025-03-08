@@ -22,12 +22,20 @@ profile_info_model = ns.model('Profile Info', {
     'is_admin': fields.Boolean(required=True, description='The user is admin'),
 })
 
-def collect_profile_info(user_id):
+def collect_profile_info_by_user_id(user_id):
     if not dao.get_by_user_id(user_id):
         return None
     _id = dao.get_by_user_id(user_id)['id']
     user = user_dao.get_by_id(user_id)
     email = user['email']
+    return collect_profile_info(_id, user_id, email, user['is_admin'])
+
+def collect_profile_info_by_user(user):
+    user_id, email = user['id'], user['email']
+    _id = dao.get_by_user_id(user_id)['id']
+    return collect_profile_info(_id, user_id, email, user['is_admin'])
+
+def collect_profile_info(_id, user_id, email, is_admin):
     if get_personnel_by_email(email):
         harmony_data = get_personnel_by_email(email)
     else:
@@ -38,9 +46,8 @@ def collect_profile_info(user_id):
         'email': email,
         'first_name': harmony_data['first_name'],
         'last_name': harmony_data['family_name'],
-        'is_admin': user['is_admin']
+        'is_admin': is_admin
     }
-
     return profile_info
 
 def create_profile(user_id):
@@ -53,7 +60,7 @@ class ProfileInfo(Resource):
     @ns.doc('get_profile')
     def get(self, user_id):
         """Get profile by user id"""
-        profile_info = collect_profile_info(user_id)
+        profile_info = collect_profile_info_by_user_id(user_id)
         if not profile_info:
             abort(404, "Profile not found")
         return profile_info
@@ -65,7 +72,7 @@ class OwnProfileInfo(Resource):
         """Get own profile"""
         token = request.headers.get('Authorization')
         token_info = get_token_info(token)
-        profile_info = collect_profile_info(token_info['user_id'])
+        profile_info = collect_profile_info_by_user_id(token_info['user_id'])
         if not profile_info:
             abort(404, "Profile not found")
         return profile_info
